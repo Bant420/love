@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>VisionWear AI</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #1e1e2f, #2c2c54);
+            color: white;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Navbar */
+        .navbar {
+            background: rgba(0,0,0,0.3);
+            padding: 15px;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .container {
+            width: 400px;
+            margin: 50px auto;
+            background: #2f2f4f;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 0 15px black;
+        }
+
+        h1 {
+            margin-top: 10px;
+        }
+
+        input[type="file"] {
+            margin: 15px 0;
+        }
+
+        button {
+            background: #ff6b6b;
+            border: none;
+            padding: 10px 20px;
+            color: white;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background: #ff4757;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #1e1e2f;
+            border-radius: 10px;
+        }
+
+        img {
+            margin-top: 10px;
+            width: 200px;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Navbar -->
+    <div class="navbar">
+        👕 VisionWear AI
+    </div>
+
+    <h2>Upload a fashion image and get instant prediction</h2>
+
+    <div class="container">
+
+        <!-- ✅ CORRECT FORM -->
+        <form action="/predict" method="POST" enctype="multipart/form-data">
+            <input type="file" name="file" required>
+            <br>
+            <button type="submit">Upload & Predict</button>
+        </form>
+
+        <!-- Result Section -->
+        {% if prediction %}
+        <div class="result">
+            <h3>Prediction: {{ prediction }}</h3>
+            <h4>Confidence: {{ confidence }}%</h4>
+            <img src="{{ image_path }}" alt="Uploaded Image">
+        </div>
+        {% endif %}
+
+    </div>
+
+</body>
+</html>
