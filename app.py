@@ -270,8 +270,8 @@ app = Flask(__name__)
 # MODEL DOWNLOAD FROM HUGGING FACE
 # ==============================
 
-MODEL_PATH = "ANN.keras"
-MODEL_URL = "https://huggingface.co/vaibhav7025/visionwear-model/resolve/main/ANN.keras"
+MODEL_PATH = "model.h5"
+MODEL_URL = "https://huggingface.co/vaibhav7025/visionwear-model/resolve/main/model.h5"
 
 # Download model if not exists
 if not os.path.exists(MODEL_PATH):
