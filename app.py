@@ -478,8 +478,8 @@ app = Flask(__name__)
 # MODEL DOWNLOAD FROM HUGGING FACE
 # ==============================
 
-MODEL_PATH = "model_fixed.h5"
-MODEL_URL = "https://huggingface.co/vaibhav7025/visionwear-model/resolve/main/model_fixed.h5"
+MODEL_PATH = "model_final.h5"
+MODEL_URL = "https://huggingface.co/vaibhav7025/visionwear-model/resolve/main/model_final.h5"
 
 # Download model if not exists
 if not os.path.exists(MODEL_PATH):
