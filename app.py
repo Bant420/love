@@ -63,6 +63,97 @@
 # if __name__ == "__main__":
 #     app.run(host="0.0.0.0", port=10000)
 
+# from flask import Flask, render_template, request
+# import numpy as np
+# import cv2
+# import os
+# import requests
+# from tensorflow.keras.models import load_model
+
+# app = Flask(__name__)
+
+# # ==============================
+# # MODEL DOWNLOAD FROM HUGGING FACE
+# # ==============================
+
+# MODEL_PATH = "ANN.keras"
+# MODEL_URL = "https://huggingface.co/vaibhav7025/visionwear-model/resolve/main/ANN.keras"
+
+# # Download model if not exists
+# if not os.path.exists(MODEL_PATH):
+#     print("Downloading model from Hugging Face...")
+#     r = requests.get(MODEL_URL)
+#     with open(MODEL_PATH, "wb") as f:
+#         f.write(r.content)
+
+# # Load model
+# model = load_model(MODEL_PATH, compile=False)
+
+# # Class labels (Fashion MNIST)
+# class_names = [
+#     "T-shirt/top", "Trouser", "Pullover", "Dress", "Coat",
+#     "Sandal", "T-shirt/top", "Sneaker", "Bag", "Ankle boot"
+# ]
+
+# # ==============================
+# # ROUTES
+# # ==============================
+
+# @app.route('/')
+# def home():
+#     return render_template("index.html")
+
+
+# @app.route('/predict', methods=['POST'])
+# def predict():
+#     file = request.files['file']
+
+#     # Create upload folder if not exists
+#     upload_folder = "static/uploads"
+#     if not os.path.exists(upload_folder):
+#         os.makedirs(upload_folder)
+
+#     filepath = os.path.join(upload_folder, file.filename)
+#     file.save(filepath)
+
+#     # Read image
+#     img = cv2.imread(filepath, cv2.IMREAD_GRAYSCALE)
+#     img = cv2.resize(img, (28, 28))
+#     img = img / 255.0
+#     img = img.reshape(1, 28, 28, 1)
+
+#     # Prediction
+#     pred = model.predict(img)
+#     confidence = round(np.max(pred) * 100, 2)
+#     result = class_names[np.argmax(pred)]
+
+#     return render_template(
+#         "index.html",
+#         prediction=result,
+#         confidence=confidence,
+#         image_path=filepath
+#     )
+
+# if __name__ == "__main__":
+#     app.run(debug=True)
+# ==============================
+# RUN APP (FOR RENDER)
+# ==============================
+
+# if __name__ == "__main__":
+#     app.run(host="0.0.0.0", port=10000)
+
+# import os
+
+# if __name__ == "__main__":
+#     port = int(os.environ.get("PORT", 10000))
+#     app.run(host="0.0.0.0", port=port)
+
+
+
+
+
+
 from flask import Flask, render_template, request
 import numpy as np
 import cv2
@@ -83,11 +174,14 @@ MODEL_URL = "https://huggingface.co/vaibhav7025/visionwear-model/resolve/main/AN
 if not os.path.exists(MODEL_PATH):
     print("Downloading model from Hugging Face...")
     r = requests.get(MODEL_URL)
+    r.raise_for_status()   # ✅ Important: ensures download success
     with open(MODEL_PATH, "wb") as f:
         f.write(r.content)
 
 # Load model
+print("Loading model...")
 model = load_model(MODEL_PATH, compile=False)
+print("Model loaded successfully!")
 
 # Class labels (Fashion MNIST)
 class_names = [
@@ -106,44 +200,49 @@ def home():
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    file = request.files['file']
+    try:
+        # Get file
+        file = request.files.get('file')
 
-    # Create upload folder if not exists
-    upload_folder = "static/uploads"
-    if not os.path.exists(upload_folder):
-        os.makedirs(upload_folder)
+        if file is None or file.filename == "":
+            return render_template("index.html", prediction="No file uploaded")
 
-    filepath = os.path.join(upload_folder, file.filename)
-    file.save(filepath)
+        # Create upload folder
+        upload_folder = "static/uploads"
+        os.makedirs(upload_folder, exist_ok=True)
 
-    # Read image
-    img = cv2.imread(filepath, cv2.IMREAD_GRAYSCALE)
-    img = cv2.resize(img, (28, 28))
-    img = img / 255.0
-    img = img.reshape(1, 28, 28, 1)
+        filepath = os.path.join(upload_folder, file.filename)
+        file.save(filepath)
 
-    # Prediction
-    pred = model.predict(img)
-    confidence = round(np.max(pred) * 100, 2)
-    result = class_names[np.argmax(pred)]
+        # Read image
+        img = cv2.imread(filepath, cv2.IMREAD_GRAYSCALE)
 
-    return render_template(
-        "index.html",
-        prediction=result,
-        confidence=confidence,
-        image_path=filepath
-    )
+        if img is None:
+            return render_template("index.html", prediction="Invalid image")
+
+        img = cv2.resize(img, (28, 28))
+        img = img / 255.0
+        img = img.reshape(1, 28, 28, 1)
+
+        # Prediction
+        pred = model.predict(img)
+        confidence = round(np.max(pred) * 100, 2)
+        result = class_names[np.argmax(pred)]
+
+        return render_template(
+            "index.html",
+            prediction=result,
+            confidence=confidence,
+            image_path=filepath
+        )
+
+    except Exception as e:
+        return render_template("index.html", prediction=f"Error: {str(e)}")
 
 
 # ==============================
-# RUN APP (FOR RENDER)
+# IMPORTANT: NO app.run() FOR RENDER
 # ==============================
 
-# if __name__ == "__main__":
-#     app.run(host="0.0.0.0", port=10000)
-
-# import os
-
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port)
+# DO NOT add app.run()
+# Render uses: gunicorn app:app
