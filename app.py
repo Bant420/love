@@ -154,6 +154,109 @@
 
 
 
+# from flask import Flask, render_template, request
+# import numpy as np
+# import cv2
+# import os
+# import requests
+# from tensorflow.keras.models import load_model
+
+# app = Flask(__name__)
+
+# # ==============================
+# # MODEL DOWNLOAD FROM HUGGING FACE
+# # ==============================
+
+# MODEL_PATH = "ANN.keras"
+# MODEL_URL = "https://huggingface.co/vaibhav7025/visionwear-model/resolve/main/ANN.keras"
+
+# # Download model if not exists
+# if not os.path.exists(MODEL_PATH):
+#     print("Downloading model from Hugging Face...")
+#     r = requests.get(MODEL_URL)
+#     r.raise_for_status()   # ✅ Important: ensures download success
+#     with open(MODEL_PATH, "wb") as f:
+#         f.write(r.content)
+
+# # Load model
+# print("Loading model...")
+# model = load_model(MODEL_PATH, compile=False)
+# print("Model loaded successfully!")
+
+# # Class labels (Fashion MNIST)
+# class_names = [
+#     "T-shirt/top", "Trouser", "Pullover", "Dress", "Coat",
+#     "Sandal", "T-shirt/top", "Sneaker", "Bag", "Ankle boot"
+# ]
+# # class_names = [
+# #     "T-shirt/top", "Trouser", "Pullover", "Dress", "Coat",
+# #     "Sandal", "T-shirt/top", "Sneaker", "Bag", "Ankle boot"
+# # ]
+
+# # ==============================
+# # ROUTES
+# # ==============================
+
+# @app.route('/')
+# def home():
+#     return render_template("index.html")
+
+
+# @app.route('/predict', methods=['POST'])
+# def predict():
+#     try:
+#         # Get file
+#         file = request.files.get('file')
+
+#         if file is None or file.filename == "":
+#             return render_template("index.html", prediction="No file uploaded")
+
+#         # Create upload folder
+#         upload_folder = "static/uploads"
+#         os.makedirs(upload_folder, exist_ok=True)
+
+#         filepath = os.path.join(upload_folder, file.filename)
+#         file.save(filepath)
+
+#         # Read image
+#         img = cv2.imread(filepath, cv2.IMREAD_GRAYSCALE)
+
+#         if img is None:
+#             return render_template("index.html", prediction="Invalid image")
+
+#         img = cv2.resize(img, (28, 28))
+#         img = img / 255.0
+#         img = img.reshape(1, 28, 28, 1)
+
+#         # Prediction
+#         pred = model.predict(img)
+#         confidence = round(np.max(pred) * 100, 2)
+#         result = class_names[np.argmax(pred)]
+
+#         return render_template(
+#             "index.html",
+#             prediction=result,
+#             confidence=confidence,
+#             image_path=filepath
+#         )
+
+#     except Exception as e:
+#         return render_template("index.html", prediction=f"Error: {str(e)}")
+
+
+# # ==============================
+# # IMPORTANT: NO app.run() FOR RENDER
+# # ==============================
+
+# # DO NOT add app.run()
+# # Render uses: gunicorn app:app
+
+
+
+
+# new code 
+
+
 from flask import Flask, render_template, request
 import numpy as np
 import cv2
@@ -174,24 +277,27 @@ MODEL_URL = "https://huggingface.co/vaibhav7025/visionwear-model/resolve/main/AN
 if not os.path.exists(MODEL_PATH):
     print("Downloading model from Hugging Face...")
     r = requests.get(MODEL_URL)
-    r.raise_for_status()   # ✅ Important: ensures download success
+    r.raise_for_status()  # ensure download success
     with open(MODEL_PATH, "wb") as f:
         f.write(r.content)
 
-# Load model
-print("Loading model...")
-model = load_model(MODEL_PATH, compile=False)
-print("Model loaded successfully!")
+# ==============================
+# LOAD MODEL SAFELY (VERY IMPORTANT)
+# ==============================
+
+try:
+    print("Loading model...")
+    model = load_model(MODEL_PATH, compile=False)
+    print("Model loaded successfully!")
+except Exception as e:
+    print("Model loading failed:", str(e))
+    model = None   # prevent crash
 
 # Class labels (Fashion MNIST)
 class_names = [
     "T-shirt/top", "Trouser", "Pullover", "Dress", "Coat",
     "Sandal", "T-shirt/top", "Sneaker", "Bag", "Ankle boot"
 ]
-# class_names = [
-#     "T-shirt/top", "Trouser", "Pullover", "Dress", "Coat",
-#     "Sandal", "T-shirt/top", "Sneaker", "Bag", "Ankle boot"
-# ]
 
 # ==============================
 # ROUTES
@@ -205,6 +311,10 @@ def home():
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
+        # Check model
+        if model is None:
+            return render_template("index.html", prediction="Model not loaded")
+
         # Get file
         file = request.files.get('file')
 
@@ -245,8 +355,6 @@ def predict():
 
 
 # ==============================
-# IMPORTANT: NO app.run() FOR RENDER
-# ==============================
-
-# DO NOT add app.run()
+# ❌ DO NOT ADD app.run()
 # Render uses: gunicorn app:app
+# ==============================
