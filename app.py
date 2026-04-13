@@ -358,6 +358,113 @@
 
 
 
+# from flask import Flask, render_template, request
+# import numpy as np
+# import cv2
+# import os
+# import requests
+# from tensorflow.keras.models import load_model
+
+# app = Flask(__name__)
+
+# # ==============================
+# # MODEL DOWNLOAD FROM HUGGING FACE
+# # ==============================
+
+# MODEL_PATH = "model.h5"
+# MODEL_URL = "https://huggingface.co/vaibhav7025/visionwear-model/resolve/main/model.h5"
+
+# # Download model if not exists
+# if not os.path.exists(MODEL_PATH):
+#     print("Downloading model from Hugging Face...")
+#     r = requests.get(MODEL_URL)
+#     r.raise_for_status()
+#     with open(MODEL_PATH, "wb") as f:
+#         f.write(r.content)
+
+# print("Model file exists:", os.path.exists(MODEL_PATH))
+# print("Model file size:", os.path.getsize(MODEL_PATH))
+
+# # ==============================
+# # LOAD MODEL SAFELY
+# # ==============================
+
+# try:
+#     print("Loading model...")
+#     model = load_model(MODEL_PATH, compile=False)
+
+#     # Important fix for .h5 models
+#     model.make_predict_function()
+
+#     print("✅ Model loaded successfully!")
+
+# except Exception as e:
+#     print("❌ Model loading failed:", str(e))
+#     model = None
+
+# # Class labels
+# class_names = [
+#     "T-shirt/top", "Trouser", "Pullover", "Dress", "Coat",
+#     "Sandal", "T-shirt/top", "Sneaker", "Bag", "Ankle boot"
+# ]
+
+# # ==============================
+# # ROUTES
+# # ==============================
+
+# @app.route('/')
+# def home():
+#     return render_template("index.html")
+
+
+# @app.route('/predict', methods=['POST'])
+# def predict():
+#     try:
+#         if model is None:
+#             return render_template("index.html", prediction="Model not loaded")
+
+#         file = request.files.get('file')
+
+#         if file is None or file.filename == "":
+#             return render_template("index.html", prediction="No file uploaded")
+
+#         upload_folder = "static/uploads"
+#         os.makedirs(upload_folder, exist_ok=True)
+
+#         filepath = os.path.join(upload_folder, file.filename)
+#         file.save(filepath)
+
+#         img = cv2.imread(filepath, cv2.IMREAD_GRAYSCALE)
+
+#         if img is None:
+#             return render_template("index.html", prediction="Invalid image")
+
+#         img = cv2.resize(img, (28, 28))
+#         img = img / 255.0
+#         img = img.reshape(1, 28, 28, 1)
+
+#         pred = model.predict(img)
+#         confidence = round(np.max(pred) * 100, 2)
+#         result = class_names[np.argmax(pred)]
+
+#         return render_template(
+#             "index.html",
+#             prediction=result,
+#             confidence=confidence,
+#             image_path=filepath
+#         )
+
+#     except Exception as e:
+#         return render_template("index.html", prediction=f"Error: {str(e)}")
+
+# # # ==============================
+# # # ❌ DO NOT ADD app.run()
+# # # Render uses: gunicorn app:app
+
+
+
+
+
 from flask import Flask, render_template, request
 import numpy as np
 import cv2
@@ -371,29 +478,29 @@ app = Flask(__name__)
 # MODEL DOWNLOAD FROM HUGGING FACE
 # ==============================
 
-MODEL_PATH = "model.h5"
-MODEL_URL = "https://huggingface.co/vaibhav7025/visionwear-model/resolve/main/model.h5"
+MODEL_PATH = "model_fixed.h5"
+MODEL_URL = "https://huggingface.co/vaibhav7025/visionwear-model/resolve/main/model_fixed.h5"
 
 # Download model if not exists
 if not os.path.exists(MODEL_PATH):
-    print("Downloading model from Hugging Face...")
+    print("⬇️ Downloading model from Hugging Face...")
     r = requests.get(MODEL_URL)
     r.raise_for_status()
     with open(MODEL_PATH, "wb") as f:
         f.write(r.content)
 
-print("Model file exists:", os.path.exists(MODEL_PATH))
-print("Model file size:", os.path.getsize(MODEL_PATH))
+print("✅ Model file exists:", os.path.exists(MODEL_PATH))
+print("📦 Model file size:", os.path.getsize(MODEL_PATH))
 
 # ==============================
 # LOAD MODEL SAFELY
 # ==============================
 
 try:
-    print("Loading model...")
+    print("🔄 Loading model...")
     model = load_model(MODEL_PATH, compile=False)
 
-    # Important fix for .h5 models
+    # Fix for .h5 models
     model.make_predict_function()
 
     print("✅ Model loaded successfully!")
@@ -402,10 +509,13 @@ except Exception as e:
     print("❌ Model loading failed:", str(e))
     model = None
 
-# Class labels
+# ==============================
+# CLASS LABELS
+# ==============================
+
 class_names = [
     "T-shirt/top", "Trouser", "Pullover", "Dress", "Coat",
-    "Sandal", "T-shirt/top", "Sneaker", "Bag", "Ankle boot"
+    "Sandal", "Shirt", "Sneaker", "Bag", "Ankle boot"
 ]
 
 # ==============================
@@ -420,6 +530,7 @@ def home():
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
+        # Check model
         if model is None:
             return render_template("index.html", prediction="Model not loaded")
 
@@ -428,21 +539,25 @@ def predict():
         if file is None or file.filename == "":
             return render_template("index.html", prediction="No file uploaded")
 
+        # Save image
         upload_folder = "static/uploads"
         os.makedirs(upload_folder, exist_ok=True)
 
         filepath = os.path.join(upload_folder, file.filename)
         file.save(filepath)
 
+        # Read image
         img = cv2.imread(filepath, cv2.IMREAD_GRAYSCALE)
 
         if img is None:
             return render_template("index.html", prediction="Invalid image")
 
+        # Preprocess
         img = cv2.resize(img, (28, 28))
         img = img / 255.0
         img = img.reshape(1, 28, 28, 1)
 
+        # Predict
         pred = model.predict(img)
         confidence = round(np.max(pred) * 100, 2)
         result = class_names[np.argmax(pred)]
@@ -457,7 +572,8 @@ def predict():
     except Exception as e:
         return render_template("index.html", prediction=f"Error: {str(e)}")
 
-# # ==============================
-# # ❌ DO NOT ADD app.run()
-# # Render uses: gunicorn app:app
-# # ==============================
+# ==============================
+# IMPORTANT: DO NOT USE app.run()
+# Render uses gunicorn
+# ==============================
+# # # ==============================
