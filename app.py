@@ -188,6 +188,10 @@ class_names = [
     "T-shirt/top", "Trouser", "Pullover", "Dress", "Coat",
     "Sandal", "T-shirt/top", "Sneaker", "Bag", "Ankle boot"
 ]
+# class_names = [
+#     "T-shirt/top", "Trouser", "Pullover", "Dress", "Coat",
+#     "Sandal", "T-shirt/top", "Sneaker", "Bag", "Ankle boot"
+# ]
 
 # ==============================
 # ROUTES
